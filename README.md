@@ -461,6 +461,121 @@ MultiPathAStarQIEA   ✓          115.20          40.50         2.3456
 
 These metrics help evaluate and compare algorithm performance in multi-UAV path planning scenarios.
 
+### n-n Scenario Specific Metrics (test_nn_paths.py)
+
+For the **n UAVs → n Destinations** scenario, the output format is slightly different:
+
+#### Console Log Output for n-n
+
+#### Map Information
+```
+Map Info:
+  Size: 50x50                    # Map dimensions (width × height in grid units)
+  Obstacles: 82                  # Number of circular obstacles on the map
+  Assignments: {0: 0, 1: 1, 2: 2}  # UAV-to-Goal assignments (UAV i → Goal j)
+```
+
+#### Algorithm Results (per UAV-destination pair)
+```
+Testing: AStar
+  UAV 0 → Goal 0: ✓ Success (length: 42.30, time: 0.0123s)  # UAV 0 to its assigned Goal 0
+  UAV 1 → Goal 1: ✓ Success (length: 38.50, time: 0.0145s)  # UAV 1 to its assigned Goal 1
+  UAV 2 → Goal 2: ✓ Success (length: 44.70, time: 0.0112s)  # UAV 2 to its assigned Goal 2
+  
+  Summary for AStar:
+    Successful paths: 3/3                          # Number of successful paths / Total UAVs
+    Total path length: 125.50                     # Sum of all path lengths
+    Average path length: 41.83                     # Average path length per UAV
+    Total computation time: 0.0380s               # Sum of computation times for all pairs
+    Average computation time: 0.0127s              # Average time per UAV-destination pair
+```
+
+#### Overall Summary Table
+```
+OVERALL SUMMARY
+Algorithm            Success Rate    Avg Length      Total Time (s)
+AStar                3/3             41.83           0.0380
+ThetaStar            3/3             40.15           0.0523
+AStarQIEA            3/3             40.50           0.7567
+...
+```
+
+**Column meanings for n-n:**
+- **Success Rate**: `X/Y` format (successful paths / total UAVs)
+- **Avg Length**: Average path length per UAV-destination pair
+- **Total Time (s)**: Sum of computation times for all UAV-destination pairs
+
+#### Visualization Metrics for n-n
+
+**Individual Algorithm Visualization:**
+
+In the information box (top-left corner):
+```
+Total Path Length: 125.50        # Sum of all path lengths
+Average Path Length: 41.83        # Average path length per UAV
+Total Computation Time: 0.0380s   # Sum of all computation times
+Average Computation Time: 0.0127s # Average time per UAV-destination pair
+```
+
+**Visual elements on the map:**
+- **Obstacles**: Red circles - no-fly zones
+- **Start points**: Colored circles (○) - each UAV has a unique color
+- **Goals**: Colored stars (★) - each goal matches its assigned UAV's color
+- **Paths**: Colored lines - each UAV's path to its assigned goal in a unique color
+- **Assignment lines**: Dashed lines connecting each UAV's start to its assigned goal (for reference)
+
+**Comparison Visualization:**
+
+In each subplot (top-left corner):
+```
+Avg Length: 41.8                  # Average path length (abbreviated)
+Total Length: 125.5                # Total path length (abbreviated)
+```
+
+### Key Differences: n-1 vs n-n
+
+| Metric | n-1 Scenario | n-n Scenario |
+|--------|--------------|--------------|
+| **Goal** | Single shared goal | Multiple goals (one per UAV) |
+| **Assignments** | Not applicable | UAV-to-Goal mapping shown |
+| **Path Length** | Total Length (sum) | Average Length (per pair) + Total Length |
+| **Makespan** | Shown (time coordination) | Not shown (independent paths) |
+| **Success Rate** | ✓ or ✗ | X/Y format |
+| **Visualization** | All paths to one goal | Each path to its assigned goal |
+
+### Example: Interpreting n-n Results
+
+```
+OVERALL SUMMARY
+Algorithm            Success Rate    Avg Length      Total Time (s)
+AStar                3/3             41.83           0.0380
+ThetaStar            3/3             40.15           0.0523
+AStarQIEA            3/3             40.50           0.7567
+```
+
+**Analysis:**
+- **AStar**: Fastest (0.038s total) but longest average paths (41.83)
+- **ThetaStar**: Slightly slower (0.052s) but shorter average paths (40.15)
+- **AStarQIEA**: Much slower (0.757s) but similar path quality (40.50)
+
+**Conclusion**: In n-n scenario, each algorithm runs independently on each UAV-destination pair. QIEA variants take longer but may find better paths for individual pairs.
+
+### Important Notes for n-n Scenario
+
+1. **Independent Planning**: Each UAV-destination pair is planned independently (no coordination)
+2. **Average vs Total**: Average Length shows typical path quality, Total Length shows overall distance
+3. **No Makespan**: Makespan is not relevant since paths are independent
+4. **Assignments**: Check assignments to understand which UAV goes to which goal
+5. **Success Rate**: All paths must succeed (X/Y = Y/Y) for full success
+
+### Tips for n-n Analysis
+
+- **Average Length**: More important than Total Length for comparing algorithm quality
+- **Success Rate**: 100% (Y/Y) is required for mission success
+- **Computation Time**: Multiply average time by number of UAVs to estimate total time
+- **Path Quality**: Compare average lengths across algorithms to see which performs best per pair
+- **QIEA Benefits**: QIEA may show advantages on complex maps (especially m4) with better average path lengths
+
 ## Citation
 
 If you use this code in your research, please cite our paper:
