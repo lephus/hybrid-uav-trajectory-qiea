@@ -315,6 +315,152 @@ python3 test_all_maps_strict_los.py
 python3 test_qiea_improvements.py
 ```
 
+## Understanding Output Metrics
+
+When running `test_multi_path.py` or `test_nn_paths.py`, you'll see various metrics in both console logs and visualization images. This section explains what each metric means and how to interpret them.
+
+### Console Log Output
+
+#### Map Information
+```
+Map Info:
+  Size: 50x50                    # Map dimensions (width × height in grid units)
+  Obstacles: 82                  # Number of circular obstacles on the map
+  Goal: (30, 10)                 # Shared goal position (all UAVs navigate here)
+  Pre-defined starts: 3          # Number of pre-defined start positions
+```
+
+#### Algorithm Results
+For each algorithm tested, you'll see:
+```
+Testing: MultiPathAStar with 3 UAVs
+  Start positions: [(5, 5), (10, 8), (15, 12)]  # Starting positions of each UAV
+  Goal: (30, 10)                                 # Shared destination
+  
+  Success: ✓                                     # Whether paths were found (✓ = success, ✗ = failed)
+  Paths found: 3/3 UAVs                          # Number of successful paths / Total UAVs
+  
+  Total path length: 125.50                     # Sum of all path lengths (all UAVs combined)
+  Makespan: 45.20 seconds                        # Time for the last UAV to reach the goal
+  Computation time: 0.1234 seconds               # Algorithm execution time
+  
+  Message: Planned 3 UAVs to single goal        # Status message
+  
+  # Per-UAV details:
+  UAV 0: 15 waypoints, length: 42.30             # UAV 0: 15 waypoints, path length 42.30
+  UAV 1: 18 waypoints, length: 38.50            # UAV 1: 18 waypoints, path length 38.50
+  UAV 2: 20 waypoints, length: 44.70            # UAV 2: 20 waypoints, path length 44.70
+```
+
+#### Summary Table
+```
+SUMMARY
+Algorithm            Success    Total Length    Makespan      Time (s)
+MultiPathAStar       ✓          125.50          45.20         0.1234
+MultiPathThetaStar   ✓          118.30          42.10         0.2345
+...
+```
+
+**Column meanings:**
+- **Success**: ✓ (all paths found) or ✗ (some paths failed)
+- **Total Length**: Sum of all path lengths (all UAVs combined)
+- **Makespan**: Time for the last UAV to reach the goal (seconds)
+- **Time (s)**: Algorithm computation time (seconds)
+
+### Visualization Metrics
+
+#### Individual Algorithm Visualization
+
+In the information box (top-left corner):
+```
+Total Path Length: 125.50        # Sum of all path lengths
+Makespan: 45.20s                 # Time for last UAV to reach goal
+Computation Time: 0.1234s        # Algorithm execution time
+```
+
+**Visual elements on the map:**
+- **Obstacles**: Red circles - no-fly zones
+- **Start points**: Colored circles (○) - each UAV has a unique color
+- **Goal**: Blue star (★) - shared destination
+- **Paths**: Colored lines - each UAV's path in a unique color
+- **Waypoints**: Small dots along paths - intermediate points
+
+#### Comparison Visualization
+
+In each subplot (top-left corner):
+```
+Length: 125.5                    # Total path length (abbreviated)
+Makespan: 45.2s                  # Makespan time (abbreviated)
+```
+
+### Detailed Metric Explanations
+
+#### 1. **Total Path Length**
+- **Definition**: Sum of all path lengths for all UAVs
+- **Formula**: `sum(path_length of UAV 0 + path_length of UAV 1 + ...)`
+- **Units**: Grid units (or meters if scaled)
+- **Interpretation**: Total distance traveled by all UAVs. **Lower is better.**
+
+#### 2. **Makespan**
+- **Definition**: Time for the last UAV to reach the goal
+- **Formula**: `max(arrival_time of all UAVs)`
+- **Units**: Seconds
+- **Interpretation**: Mission completion time. Critical for multi-UAV coordination. **Lower is better.**
+
+#### 3. **Computation Time**
+- **Definition**: Time taken by the algorithm to find paths
+- **Units**: Seconds
+- **Interpretation**: Algorithm efficiency. **Lower is better**, but may trade off with path quality.
+
+#### 4. **Waypoints**
+- **Definition**: Number of intermediate points on a path (excluding start and goal)
+- **Interpretation**: Path complexity. Fewer waypoints typically indicate smoother paths with fewer direction changes. **Lower is generally better.**
+
+#### 5. **Path Length (per UAV)**
+- **Definition**: Distance traveled by a specific UAV
+- **Formula**: `sum(distances between consecutive waypoints)`
+- **Units**: Grid units
+- **Interpretation**: Individual UAV travel distance. **Lower is better.**
+
+#### 6. **Success Rate**
+- **Definition**: Percentage of UAVs that successfully found paths
+- **Formula**: `(successful_paths / total_UAVs) × 100%`
+- **Interpretation**: Algorithm reliability. **100% is ideal.**
+
+### Example: Interpreting Results
+
+```
+SUMMARY
+Algorithm            Success    Total Length    Makespan      Time (s)
+MultiPathAStar       ✓          125.50          45.20         0.1234
+MultiPathThetaStar   ✓          118.30          42.10         0.2345
+MultiPathAStarQIEA   ✓          115.20          40.50         2.3456
+```
+
+**Analysis:**
+- **MultiPathAStar**: Fastest (0.12s) but longest paths (125.50)
+- **MultiPathThetaStar**: Slower (0.23s) but shorter paths (118.30)
+- **MultiPathAStarQIEA**: Slowest (2.35s) but shortest paths (115.20) and best makespan (40.50s)
+
+**Conclusion**: QIEA trades computation time for better path quality (shorter paths, better makespan).
+
+### Important Notes
+
+1. **Success**: Only shows ✓ when ALL UAVs successfully find paths
+2. **Total Length**: Sum of all paths, NOT average
+3. **Makespan**: Critical for multi-UAV scenarios - measures mission completion time
+4. **Computation Time**: Does not include visualization time
+5. **Waypoints**: Fewer waypoints usually indicate smoother, more efficient paths
+
+### Tips for Analysis
+
+- **Compare algorithms**: Lower Total Length and Makespan with reasonable Computation Time is ideal
+- **QIEA variants**: Expect longer computation times but better path quality
+- **Makespan importance**: In time-critical missions, makespan may be more important than total length
+- **Waypoint count**: Fewer waypoints indicate smoother paths, which are easier for UAVs to follow
+
+These metrics help evaluate and compare algorithm performance in multi-UAV path planning scenarios.
+
 ## Citation
 
 If you use this code in your research, please cite our paper:
