@@ -28,12 +28,14 @@ This repository contains the implementation of a hybrid path planning framework 
 - **Safety Guarantees**: All paths comply with strict LOS requirements
 
 ### 5. **Comprehensive Map Generation**
-- **Three Map Types**: 
+- **Four Map Types**: 
   - **m1 (Sparse)**: Maximum 4 alternative paths, moderate obstacle density
   - **m2 (Dense)**: Maximum 3 alternative paths, high obstacle density
   - **m3 (Trap)**: Maximum 2 alternative paths, very high obstacle density
+  - **m4 (QIEA Challenge)**: Complex maze-like structure with multiple alternative paths, narrow passages, and local optima (designed to showcase QIEA's advantages)
 - **Border Obstacles**: Prevents paths from going outside map boundaries
 - **Controlled Complexity**: Ensures maps meet specific path count constraints
+- **Multi-UAV Support**: Supports both n-1 (n UAVs → 1 goal) and n-n (n UAVs → n destinations) scenarios
 
 ## Project Structure
 
@@ -57,13 +59,24 @@ FJCAI-2026_uav-qiea-hybrid-optimizer/
 │   ├── visualizations/           # Generated path visualizations
 │   └── result/                   # High-quality publication figures
 │
-├── map_generator.py              # Map generation with controlled complexity
-├── test_algorithms.py            # Main testing script for all algorithms
+├── map_generator.py              # Map generation for single UAV (1-1)
+├── map_generator_multi_uav.py   # Map generation for n-1 scenario (n UAVs → 1 goal)
+├── map_generator_nn.py          # Map generation for n-n scenario (n UAVs → n destinations)
+├── test_algorithms.py            # Main testing script for single UAV algorithms
+├── test_multi_path.py            # Testing script for n-1 scenario
+├── test_nn_paths.py              # Testing script for n-n scenario
 ├── validate_paths.py            # Path validation and strict LOS checking
 ├── visualize_paths.py           # Path visualization tool (overlay & side-by-side)
 ├── visualize_map.py              # Map visualization tool
+├── visualize_multi_paths.py      # Visualization for n-1 scenario
+├── visualize_nn_paths.py         # Visualization for n-n scenario
+│
+├── maps/
+│   ├── multi_uav/               # Maps for n-1 scenario
+│   └── nn_destinations/         # Maps for n-n scenario
 │
 ├── ANALYSIS_QIEA_IMPROVEMENT.md  # Detailed analysis of QIEA improvements
+├── QIEA_MAP_GUIDE.md            # Guide for creating maps that showcase QIEA advantages
 ├── requirements.txt              # Python dependencies
 └── README.md                     # This file
 ```
@@ -162,6 +175,97 @@ python3 validate_paths.py --map maps/m1_50x50.json
 
 Validates that all paths comply with strict LOS requirements (no touching or entering obstacles).
 
+### Multi-UAV Path Planning
+
+The framework supports two multi-UAV scenarios:
+
+#### 1. **n UAVs → 1 Goal (n-1 Scenario)**
+
+Multiple UAVs start from different positions and all navigate to a single shared goal.
+
+**Generate maps:**
+```bash
+# Generate a single map
+python3 map_generator_multi_uav.py --type m1 --size 50 --uavs 5
+
+# Generate all maps (all types, sizes, and UAV counts)
+python3 map_generator_multi_uav.py --all
+```
+
+**Test algorithms:**
+```bash
+# Test with visualization
+python3 test_multi_path.py --viz
+
+# Test with specific map and save visualizations
+python3 test_multi_path.py --map maps/multi_uav/m1_50x50_5uavs.json --viz --save-viz
+
+# Test with specific number of UAVs
+python3 test_multi_path.py --uavs 3 5 10 --viz
+```
+
+**Available algorithms for n-1:**
+- `MultiPathAStar`: A* for each UAV independently
+- `MultiPathThetaStar`: Theta* for each UAV independently
+- `MultiPathDijkstra`: Dijkstra for each UAV independently
+- `MultiPathAStarQIEA`: A* + QIEA optimization for each UAV
+- `MultiPathThetaStarQIEA`: Theta* + QIEA optimization for each UAV
+- `MultiPathDijkstraQIEA`: Dijkstra + QIEA optimization for each UAV
+
+#### 2. **n UAVs → n Destinations (n-n Scenario)**
+
+Each UAV is assigned to a specific destination (one-to-one assignment).
+
+**Generate maps:**
+```bash
+# Generate a single n-n map
+python3 map_generator_nn.py --type m1 --size 50 --uavs 5
+
+# Generate m4 (QIEA Challenge) map - designed to showcase QIEA advantages
+python3 map_generator_nn.py --type m4 --size 100 --uavs 5
+
+# Generate all n-n maps
+python3 map_generator_nn.py --all
+```
+
+**Test algorithms:**
+```bash
+# Test with visualization
+python3 test_nn_paths.py --map maps/nn_destinations/m1_50x50_3uavs.json --viz --save-viz
+
+# Test on QIEA Challenge map (m4)
+python3 test_nn_paths.py --map maps/nn_destinations/m4_100x100_5nn.json --viz --save-viz
+```
+
+**Available algorithms for n-n:**
+Each algorithm is tested independently on each UAV-destination pair:
+- `AStar`: A* path planning
+- `ThetaStar`: Theta* path planning
+- `Dijkstra`: Dijkstra path planning
+- `AStarQIEA`: A* + QIEA optimization
+- `ThetaStarQIEA`: Theta* + QIEA optimization
+- `DijkstraQIEA`: Dijkstra + QIEA optimization
+- `QIEA`: Standalone QIEA path planning
+
+**Map types for n-n:**
+- **m1**: Sparse environment with low obstacle density
+- **m2**: Dense environment with high obstacle density
+- **m3**: Maximum difficulty with only 1-2 possible paths
+- **m4**: QIEA Challenge - Complex maze-like structure with multiple alternative paths, narrow passages, and local optima (recommended for showcasing QIEA advantages)
+
+**Example workflow for n-n:**
+```bash
+# 1. Generate a QIEA Challenge map
+python3 map_generator_nn.py --type m4 --size 100 --uavs 5
+
+# 2. Test all algorithms and visualize
+python3 test_nn_paths.py --map maps/nn_destinations/m4_100x100_5nn.json --viz --save-viz
+
+# 3. View results in maps/visualizations/
+```
+
+**Note**: For best results showcasing QIEA advantages, use map type **m4** with size >= 100. See `QIEA_MAP_GUIDE.md` for detailed guidance.
+
 ### Advanced Configuration
 
 #### QIEA Parameters
@@ -195,8 +299,14 @@ cost = calculate_path_cost(
 Run comprehensive tests:
 
 ```bash
-# Test all algorithms
+# Test single UAV algorithms
 python3 test_algorithms.py
+
+# Test multi-UAV n-1 scenario
+python3 test_multi_path.py --viz
+
+# Test multi-UAV n-n scenario
+python3 test_nn_paths.py --map maps/nn_destinations/m1_50x50_3uavs.json --viz --save-viz
 
 # Test strict LOS compliance
 python3 test_all_maps_strict_los.py
