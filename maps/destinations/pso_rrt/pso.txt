@@ -1,0 +1,62 @@
+============================================================
+  PSO (Particle Swarm Optimization)
+============================================================
+  Map        : maps/destinations/m1_50x50.json
+  Size       : 50 × 50
+  NFZ count  : 81 circles
+  Start      : (32, 32)
+  Goal       : (30, 10)
+  Waypoints  : 5
+  Particles  : 60
+  Iterations : 300
+
+  Success      : Yes
+  Length       : 27.8595
+  Waypoints    : 7
+  Time (s)     : 5.9026
+  Best fitness : 27.8595
+  Evaluations  : 18000
+  Message      : PSO path found
+
+  Path:
+    [  0]  (32.00, 32.00)  ← start
+    [  1]  (29.87, 27.24)
+    [  2]  (28.10, 22.28)
+    [  3]  (27.97, 19.56)
+    [  4]  (27.60, 18.64)
+    [  5]  (23.87, 12.82)
+    [  6]  (30.00, 10.00)  ← goal
+============================================================
+
+
+============================================================ 
+==> Sometimes the PSO algorithm fails to find a solution <==
+============================================================
+  PSO (Particle Swarm Optimization)
+============================================================
+  Map        : maps/destinations/m1_50x50.json
+  Size       : 50 × 50
+  NFZ count  : 81 circles
+  Start      : (32, 32)
+  Goal       : (30, 10)
+  Waypoints  : 5
+  Particles  : 60
+  Iterations : 300
+
+  Success      : No  ← path crosses NFZ (known PSO limitation)
+  Length       : 58.5018
+  Waypoints    : 7
+  Time (s)     : 5.7779
+  Best fitness : 127.7727
+  Evaluations  : 18000
+  Message      : PSO converged but path still intersects NFZ obstacles
+
+  Path:
+    [  0]  (32.00, 32.00)  ← start
+    [  1]  (27.82, 21.90)
+    [  2]  (24.90, 25.06)
+    [  3]  (31.10, 18.40)
+    [  4]  (42.68, 20.30)
+    [  5]  (28.55, 17.97)
+    [  6]  (30.00, 10.00)  ← goal
+============================================================

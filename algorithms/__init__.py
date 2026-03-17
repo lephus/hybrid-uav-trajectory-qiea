@@ -1,8 +1,9 @@
 """
 Path Planning Algorithms for UAV Trajectory Optimization
 
-This package provides classical path planning algorithms (A*, Theta*, Dijkstra)
-and their QIEA-optimized hybrid variants.
+This package provides classical path planning algorithms (A*, Theta*, Dijkstra),
+their QIEA-optimized hybrid variants, and standalone continuous-space planners
+(RRT*, PSO).
 
 QIEA (Quantum-Inspired Evolutionary Algorithm) is used to optimize paths
 found by classical algorithms, not as a standalone path planner.
@@ -15,6 +16,8 @@ from .dijkstra import Dijkstra
 from .hybrid import AStarQIEA, ThetaStarQIEA, DijkstraQIEA
 from .multi_path_base import MultiPathAStar, MultiPathThetaStar, MultiPathDijkstra
 from .multi_path_hybrid import MultiPathAStarQIEA, MultiPathThetaStarQIEA, MultiPathDijkstraQIEA
+from .rrt import RRTStar
+from .pso import PSO
 
 # QIEA is available internally for hybrid algorithms but not exported
 # as it's designed to optimize classical algorithms, not work standalone
@@ -37,5 +40,7 @@ __all__ = [
     'MultiPathAStarQIEA',
     'MultiPathThetaStarQIEA',
     'MultiPathDijkstraQIEA',
+    'RRTStar',
+    'PSO',
 ]
 

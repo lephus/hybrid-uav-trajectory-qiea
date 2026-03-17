@@ -115,66 +115,75 @@ class MapGenerator:
         
         return (0, 0), (self.width-1, self.height-1)
     
-    def generate_m1_sparse(self, num_obstacles: int = None, 
-                          min_radius: float = None, max_radius: float = None) -> bool:
+    def generate_m1_sparse(self, num_obstacles: int = None,
+                          min_radius: float = None, max_radius: float = None,
+                          allow_denser_packing: bool = False) -> bool:
         """
         Generate m1: Sparse environment with low obstacle density
-        
+
         Args:
             num_obstacles: Number of obstacles (auto-calculated if None)
             min_radius: Minimum circle radius
             max_radius: Maximum circle radius
-        
+            allow_denser_packing: If True, allow more overlap to reach high obstacle counts (e.g. scaled maps)
+
         Returns:
             True if successful, False otherwise
         """
         self.grid = np.zeros((self.height, self.width), dtype=bool)
         self.obstacles = []
-        
+
         # Auto-calculate parameters based on map size
         if num_obstacles is None:
             area = self.width * self.height
             num_obstacles = int(area * 0.05)  # ~5% of cells as obstacles
-        
+
         if min_radius is None:
             min_radius = min(self.width, self.height) * 0.02
-        
+
         if max_radius is None:
             max_radius = min(self.width, self.height) * 0.08
-        
-        max_attempts = 1000
+
+        max_attempts = max(1000, num_obstacles * 3)  # scale for large maps
         attempts = 0
-        
+
         while len(self.obstacles) < num_obstacles and attempts < max_attempts:
             attempts += 1
-            
+
             # Random center and radius
             cx = np.random.uniform(max_radius, self.width - max_radius)
             cy = np.random.uniform(max_radius, self.height - max_radius)
             radius = np.random.uniform(min_radius, max_radius)
-            
+
             # Check bounds
             if not self._is_circle_in_bounds(cx, cy, radius):
                 continue
-            
-            # Check overlap with existing obstacles (allow small overlap)
-            overlaps = False
-            for ox, oy, orad in self.obstacles:
-                if self._circles_overlap(cx, cy, radius, ox, oy, orad, min_distance=-radius*0.3):
-                    overlaps = True
-                    break
-            
-            if not overlaps:
-                self._add_circle_to_grid(cx, cy, radius)
-        
+
+            # Overlap check: allow more overlap when allow_denser_packing (for scaled maps)
+            overlap_margin = -radius * 0.8 if allow_denser_packing else -radius * 0.3
+            if allow_denser_packing:
+                overlap_count = sum(
+                    1 for (ox, oy, orad) in self.obstacles
+                    if self._circles_overlap(cx, cy, radius, ox, oy, orad, min_distance=overlap_margin)
+                )
+                if overlap_count <= 12:  # allow overlaps to reach scaled NFZ count (e.g. 1280 for 200x200)
+                    self._add_circle_to_grid(cx, cy, radius)
+            else:
+                overlaps = any(
+                    self._circles_overlap(cx, cy, radius, ox, oy, orad, min_distance=overlap_margin)
+                    for ox, oy, orad in self.obstacles
+                )
+                if not overlaps:
+                    self._add_circle_to_grid(cx, cy, radius)
+
         # Find start and goal
         self.start, self.goal = self._find_free_start_goal()
-        
+
         # Verify path exists
         if not self._check_path_exists(self.start, self.goal):
             # Try to remove some obstacles near the path
-            return self.generate_m1_sparse(int(num_obstacles * 0.9), min_radius, max_radius)
-        
+            return self.generate_m1_sparse(int(num_obstacles * 0.9), min_radius, max_radius, allow_denser_packing)
+
         return True
     
     def generate_m2_dense(self, num_obstacles: int = None,
@@ -490,9 +499,45 @@ def generate_all_maps():
     return results
 
 
+def generate_one_destination_maps():
+    """
+    Generate m1 one-destination maps for 100x100 and 200x200 with the same
+    obstacle density as the 50x50 map (maps/one_destinations/m1_50x50.json has 80 NFZs).
+    Density scaling: (size/50)^2 → 100x100 has 4x obstacles, 200x200 has 16x.
+    """
+    base_size = 50
+    base_num_obstacles = 80  # from m1_50x50.json
+    one_dest_dir = Path('maps') / 'one_destinations'
+    one_dest_dir.mkdir(parents=True, exist_ok=True)
+
+    results = []
+    for size in [100, 200]:
+        scale = (size / base_size) ** 2
+        num_obstacles = int(base_num_obstacles * scale)
+        print(f"\nGenerating m1 one-destination map {size}x{size} ({num_obstacles} NFZs)...")
+        generator = MapGenerator(size, size)
+        success = generator.generate_m1_sparse(num_obstacles=num_obstacles, allow_denser_packing=True)
+        if success:
+            path = one_dest_dir / f"m1_{size}x{size}.json"
+            generator.save_to_file(str(path))
+            density = generator.get_obstacle_density()
+            results.append({
+                'size': f"{size}x{size}",
+                'num_obstacles': len(generator.obstacles),
+                'density': f"{density:.2f}%",
+                'file': str(path),
+            })
+            print(f"  ✓ Saved {path} (density: {density:.2f}%, obstacles: {len(generator.obstacles)})")
+        else:
+            print(f"  ✗ Failed to generate m1 {size}x{size}")
+    return results
+
+
 if __name__ == "__main__":
     print("UAV Map Generator")
     print("="*60)
     generate_all_maps()
+    print("\n--- One-destination maps (m1 100x100, 200x200) ---")
+    generate_one_destination_maps()
     print("\nAll maps generated successfully!")
 
