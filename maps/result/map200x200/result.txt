@@ -1,0 +1,97 @@
+============================================================
+
+This test compares:
+  - Classical algorithms: A*, Theta*, Dijkstra
+  - QIEA-optimized variants: A*+QIEA, Theta*+QIEA, Dijkstra+QIEA
+
+QIEA (Quantum-Inspired Evolutionary Algorithm) is used to optimize
+paths found by classical algorithms, demonstrating the improvement.
+============================================================
+
+############################################################
+Testing algorithms on: maps/destinations/m1_200x200.json
+############################################################
+
+Map Info:
+  Size: 200x200
+  Obstacles: 90
+  Start: (40, 180)
+  Goal: (120, 40)
+
+============================================================
+Testing: A*
+============================================================
+Success: True
+Path length: 173.14
+Cost: 173.14
+Number of waypoints: 141
+Computation time: 3.5087 seconds
+Nodes explored: 4770
+
+============================================================
+Testing: Theta*
+============================================================
+Success: True
+Path length: 162.07
+Cost: 162.07
+Number of waypoints: 6
+Computation time: 0.8408 seconds
+Nodes explored: 745
+
+============================================================
+Testing: Dijkstra
+============================================================
+Success: True
+Path length: 173.14
+Cost: 173.14
+Number of waypoints: 141
+Computation time: 15.4895 seconds
+Nodes explored: 22349
+
+Note: Hybrid algorithms use QIEA for optimization and may take longer...
+
+============================================================
+Testing: A* + QIEA
+============================================================
+Success: True
+Path length: 162.57
+Cost: 162.98
+Number of waypoints: 6
+Computation time: 21.4092 seconds
+Nodes explored: 6270
+
+============================================================
+Testing: Theta* + QIEA
+============================================================
+Success: True
+Path length: 162.07
+Cost: 162.07
+Number of waypoints: 6
+Computation time: 54.9434 seconds
+Nodes explored: 745
+
+============================================================
+Testing: Dijkstra + QIEA
+============================================================
+Success: True
+Path length: 162.65
+Cost: 163.33
+Number of waypoints: 6
+Computation time: 33.8191 seconds
+Nodes explored: 23849
+
+============================================================
+SUMMARY
+============================================================
+Algorithm            Success    Path Length     Time (s)     Nodes     
+------------------------------------------------------------
+A*                   ✓          173.14          3.5087       4770      
+Theta*               ✓          162.07          0.8408       745       
+Dijkstra             ✓          173.14          15.4895      22349     
+A*+QIEA              ✓          162.57          21.4092      6270      
+Theta*+QIEA          ✓          162.07          54.9434      745       
+Dijkstra+QIEA        ✓          162.65          33.8191      23849     
+
+============================================================
+Test completed!
+============================================================
